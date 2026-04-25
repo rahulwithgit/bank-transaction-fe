@@ -13,7 +13,7 @@ export const Layout: React.FC = () => {
   return (
     <div className="app-container">
       <header className="header">
-        <div className="header-title">Demo bank</div>
+        <div className="header-title">HCLTech</div>
         {localStorage.getItem('token') && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div className="profile-circle" title="Profile View">

@@ -44,12 +44,12 @@ export const api = {
     if (!hashedOtp) throw new Error('OTP is required');
 
     try {
-      const response = await fetch('http://10.138.176.184:8080/api/v1/login', {
+      const response = await fetch('http://10.138.177.26:8080/api/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ hash: hashedOtp }),
+        body: JSON.stringify({ hash: hashedOtp, customerId }),
       });
 
       if (!response.ok) {
@@ -74,14 +74,41 @@ export const api = {
 
   getAccounts: async (page = 1, pageSize = 5): Promise<PaginatedResponse<Account>> => {
     checkAuth();
-    await delay(300);
+    
+    const customerId = localStorage.getItem('customerId') || 'CUST001';
+    const response = await fetchAuthenticated(`http://10.138.177.26:8080/api/v1/customers/${customerId}/favorite-accounts`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch favorite accounts with status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    
+    // Safely handle different possible response formats (array vs object)
+    let rawData: any[] = [];
+    if (Array.isArray(json)) {
+      rawData = json;
+    } else if (json && Array.isArray(json.data)) {
+      rawData = json.data;
+    }
+
+    // Map the backend properties to the frontend's expected Account interface
+    const allData: Account[] = rawData.map((item, index) => ({
+      id: item.id || item.iban || String(index),
+      name: item.accountName || item.name || '',
+      iban: item.iban || '',
+      bank: item.bankName || item.bank || ''
+    }));
+
+    // Since the endpoint might not support pagination natively, we handle it client-side
+    // to maintain compatibility with the UI's PaginatedResponse expectation.
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
-    const data = accountsDB.slice(start, end);
+    const pagedData = allData.slice(start, end);
 
     return {
-      data,
-      total: accountsDB.length,
+      data: pagedData,
+      total: allData.length,
       page,
       pageSize
     };
@@ -89,21 +116,61 @@ export const api = {
 
   getAccount: async (id: string): Promise<Account> => {
     checkAuth();
-    await delay(200);
-    const account = accountsDB.find(a => a.id === id);
-    if (!account) throw new Error('Account not found');
-    return account;
+    
+    // We expect the 'id' to be the IBAN since we map it as such in 'getAccounts'.
+    const response = await fetchAuthenticated(`http://10.138.176.184/api/v1/bank/${id}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch account details: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: id,
+      name: data.accountName || data.name || '',
+      iban: data.iban || id,
+      bank: data.bankName || data.bank || ''
+    };
   },
 
   addAccount: async (accountData: Omit<Account, 'id'>): Promise<Account> => {
     checkAuth();
-    await delay(400);
-    if (accountsDB.length >= 20) {
-      throw new Error('Maximum of 20 favorite accounts allowed.');
+    const customerId = localStorage.getItem('customerId') || 'CUST001';
+    
+    const response = await fetchAuthenticated(`http://10.138.177.26:8080/api/v1/customers/${customerId}/favorite-accounts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        accountName: accountData.name,
+        iban: accountData.iban,
+        bankName: accountData.bank
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to add favorite account with status: ${response.status}`);
     }
-    const newAccount = { ...accountData, id: Math.random().toString(36).substring(2, 9) };
-    accountsDB.unshift(newAccount);
-    return newAccount;
+
+    // Try to parse the response to extract the new account, or return a fake response based on submitted data
+    let newAccount: any = {};
+    const textResponse = await response.text();
+    if (textResponse) {
+      try {
+        newAccount = JSON.parse(textResponse);
+      } catch {
+        // Ignored
+      }
+    }
+
+    return {
+      id: newAccount.id || Math.random().toString(36).substring(2, 9),
+      name: newAccount.accountName || newAccount.name || accountData.name,
+      iban: newAccount.iban || accountData.iban,
+      bank: newAccount.bankName || newAccount.bank || accountData.bank
+    };
   },
 
   updateAccount: async (id: string, accountData: Omit<Account, 'id'>): Promise<Account> => {
@@ -118,7 +185,14 @@ export const api = {
 
   deleteAccount: async (id: string): Promise<void> => {
     checkAuth();
-    await delay(300);
-    accountsDB = accountsDB.filter(a => a.id !== id);
+    const customerId = localStorage.getItem('customerId') || 'CUST001';
+    
+    const response = await fetchAuthenticated(`http://10.138.177.26:8080/api/v1/customers/${customerId}/favorite-accounts/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete favorite account with status: ${response.status}`);
+    }
   }
 };

@@ -53,7 +53,7 @@ export const AccountsList: React.FC = () => {
                 <p>{acc.bank}</p>
               </div>
               <div className="account-actions">
-                <button className="icon-btn" onClick={() => navigate(`/id/${acc.id}`)}>
+                <button className="icon-btn" onClick={() => navigate(`/id/${acc.id}`, { state: acc })}>
                   <Edit2 size={18} />
                 </button>
               </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { validateName, validateIBAN } from '../utils/validators';
 import { calculateBankFromIBAN } from '../utils/bank';
@@ -7,24 +7,26 @@ import { calculateBankFromIBAN } from '../utils/bank';
 export const AccountForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEdit = !!id;
+  const stateAccount = location.state as { name: string; iban: string; bank: string } | null;
 
-  const [name, setName] = useState('');
-  const [iban, setIban] = useState('');
-  const [bank, setBank] = useState('');
+  const [name, setName] = useState(stateAccount?.name || '');
+  const [iban, setIban] = useState(stateAccount?.iban || '');
+  const [bank, setBank] = useState(stateAccount?.bank || '');
   const [loading, setLoading] = useState(false);
   const [errorString, setErrorString] = useState('');
   const [apiError, setApiError] = useState('');
 
   useEffect(() => {
-    if (isEdit) {
+    if (isEdit && !stateAccount) {
       api.getAccount(id).then(acc => {
         setName(acc.name);
         setIban(acc.iban);
         setBank(acc.bank);
-      }).catch(err => setApiError('Failed to load account'));
+      }).catch(() => setApiError('Failed to load account'));
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, stateAccount]);
 
   useEffect(() => {
     try {

@@ -39,6 +39,7 @@ export const Login: React.FC = () => {
       const res = await api.login(customerId, hashedOtp);
       if (res.success) {
         localStorage.setItem('token', res.token);
+        localStorage.setItem('customerId', customerId);
         navigate('/');
       }
     } catch (err: any) {
