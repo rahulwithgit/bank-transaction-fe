@@ -36,7 +36,7 @@ function App() {
             } 
           />
           <Route 
-            path="/edit/:id" 
+            path="/id/:id" 
             element={
               <ProtectedRoute>
                 <AccountForm />

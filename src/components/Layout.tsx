@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 export const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +13,17 @@ export const Layout: React.FC = () => {
   return (
     <div className="app-container">
       <header className="header">
-        <div className="header-title">HCL Bank</div>
+        <div className="header-title">Demo bank</div>
         {localStorage.getItem('token') && (
-          <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.5rem 1rem' }}>
-            <LogOut size={16} style={{ marginRight: '0.5rem' }} />
-            Logout
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="profile-circle" title="Profile View">
+              <User size={20} />
+            </div>
+            <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.5rem 1rem' }}>
+              <LogOut size={16} style={{ marginRight: '0.5rem' }} />
+              Logout
+            </button>
+          </div>
         )}
       </header>
       <main className="main-content">
