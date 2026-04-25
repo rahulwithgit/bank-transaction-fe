@@ -1,73 +1,84 @@
-# React + TypeScript + Vite
+# HCL Favorite Accounts - Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive, and secure React-based frontend application for managing your Favorite Bank Accounts. Built as part of the HCLTech workbook. 
 
-Currently, two official plugins are available:
+This application connects to a Spring Boot backend API to securely authenticate users with OTP and provides full CRUD capabilities (Create, Read, Update, Delete) to keep tracking favorite account details, automatically parsing IBAN bank names in real-time.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🌟 Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **OTP Flow & JWT Authentication** 
+  - Login system accepting a Customer ID and an OTP.
+  - Automatically performs frontend hashing (`SHA-256`) of the OTP before securely sending it to the backend.
+  - Intercepts API requests with `fetchAuthenticated` to auto-inject the obtained JWT bearer token.
+- **Complete CRUD Lifecycle**
+  - View paginated dashboard arrays of favorite accounts.
+  - Securely Add (`POST`), Edit (`PUT`), and Delete (`DELETE`) favorite bank accounts entirely linked dynamically to your backend server running on `10.138.176.184:8080`.
+- **Intelligent Validation**
+  - Extracts the bank name locally out of standard IBAN patterns on the fly.
+  - Full client-side validation logic restricting unauthorized special characters within Account names or IBAN limits.
+- **Robust Testing Setup**
+  - Component-by-component frontend test suites integrated efficiently with `Vitest` & `React Testing Library`.
+- **Glassmorphism UI**
+  - Visually engaging, responsive Glassmorphism design aesthetics.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Technologies & Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **React Engine:** React v19, React Router DOM (v7)
+- **Tooling:** Vite, TypeScript
+- **Styling UI:** Vanilla CSS (`index.css`) & Lucide React (for crisp iconography)
+- **Testing:** `Vitest`, `@testing-library/react`, `@testing-library/jest-dom`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 Getting Started
+
+### 1. Installation
+Clone the repository and install dependencies using `npm`.
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Running Locally (Dev Server)
+To run the local Vite development server:
+```bash
+npm run dev
+```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+*The application will quickly spin up, typically on `http://localhost:5173`. Any changes saved in your `src/` directory reflect instantaneously via Hot Module Replacement (HMR).*
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🧪 Testing your Application
+
+This project is fully equipped with React testing libraries. You can test validations and UI rendering conditions directly to ensure application stability.
+
+To run the full suite:
+```bash
+npm test
+```
+
+To run your tests continuously in **watch mode** during development:
+```bash
+npm test -- --watch
+```
+
+> **Note:** For more in-depth testing mechanics, refer to the dedicated **`TESTING.md`** file located in the root of the project!
+
+---
+
+## 🏗️ Folder Structure
+
+```text
+src/
+├── components/          # Reusable UI component shells (e.g. Layout.tsx)
+├── pages/               # Main application pages (Login, AccountsList, AccountForm)
+├── services/            # API integration & generic fetch helpers (api.ts)
+├── utils/               # Independent utility logics (bank.ts, validators.ts, crypto.ts)
+├── types.ts             # Global TypeScript type definitions
+└── main.tsx             # React entry point
 ```

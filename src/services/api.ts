@@ -1,17 +1,6 @@
 import type { Account, PaginatedResponse } from '../types';
 
-// Mock DB
-let accountsDB: Account[] = [
-  { id: '1', name: 'Bridge Foundation', iban: 'ES50 1234 4954 4443 2222', bank: 'Nairobi Bank' },
-  { id: '2', name: 'Ramón Curado García', iban: 'ES50 1235 4954 4443 2222', bank: 'Denver Bank' },
-  { id: '3', name: 'Vodafone Spain', iban: 'ES50 1236 4954 4443 2222', bank: 'Moscow Bank' },
-  { id: '4', name: 'Bridge Foundation', iban: 'ES50 1234 4954 4443 2222', bank: 'Nairobi Bank' },
-  { id: '5', name: 'Ramón Curado García', iban: 'ES50 1235 4954 4443 2222', bank: 'Denver Bank' },
-  { id: '6', name: 'Vodafone Spain', iban: 'ES50 1236 4954 4443 2222', bank: 'Moscow Bank' },
-  { id: '7', name: 'Bridge Foundation', iban: 'ES50 1234 4954 4443 2222', bank: 'Nairobi Bank' },
-  { id: '8', name: 'Ramón Curado García', iban: 'ES50 1235 4954 4443 2222', bank: 'Denver Bank' },
-  { id: '9', name: 'Vodafone Spain', iban: 'ES50 1236 4954 4443 2222', bank: 'Moscow Bank' },
-];
+// Mock DB removed since all endpoints are now integrated with real API
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -44,7 +33,7 @@ export const api = {
     if (!hashedOtp) throw new Error('OTP is required');
 
     try {
-      const response = await fetch('http://10.138.177.26:8080/api/v1/login', {
+      const response = await fetch('http://10.138.176.184:8080/api/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +65,7 @@ export const api = {
     checkAuth();
     
     const customerId = localStorage.getItem('customerId') || 'CUST001';
-    const response = await fetchAuthenticated(`http://10.138.177.26:8080/api/v1/customers/${customerId}/favorite-accounts`);
+    const response = await fetchAuthenticated(`http://10.138.176.184:8080/api/v1/customers/${customerId}/favorite-accounts`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch favorite accounts with status: ${response.status}`);
@@ -138,7 +127,7 @@ export const api = {
     checkAuth();
     const customerId = localStorage.getItem('customerId') || 'CUST001';
     
-    const response = await fetchAuthenticated(`http://10.138.177.26:8080/api/v1/customers/${customerId}/favorite-accounts`, {
+    const response = await fetchAuthenticated(`http://10.138.176.184:8080/api/v1/customers/${customerId}/favorite-accounts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -175,19 +164,47 @@ export const api = {
 
   updateAccount: async (id: string, accountData: Omit<Account, 'id'>): Promise<Account> => {
     checkAuth();
-    await delay(400);
-    const index = accountsDB.findIndex(a => a.id === id);
-    if (index === -1) throw new Error('Account not found');
+    const customerId = localStorage.getItem('customerId') || 'CUST001';
+    
+    const response = await fetchAuthenticated(`http://10.138.176.184:8080/api/v1/customers/${customerId}/favorite-accounts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        accountName: accountData.name,
+        iban: accountData.iban,
+        bankName: accountData.bank
+      }),
+    });
 
-    accountsDB[index] = { ...accountData, id };
-    return accountsDB[index];
+    if (!response.ok) {
+      throw new Error(`Failed to update favorite account with status: ${response.status}`);
+    }
+
+    let updatedAccount: any = {};
+    const textResponse = await response.text();
+    if (textResponse) {
+      try {
+        updatedAccount = JSON.parse(textResponse);
+      } catch {
+        // Ignored
+      }
+    }
+
+    return {
+      id: updatedAccount.id || id,
+      name: updatedAccount.accountName || updatedAccount.name || accountData.name,
+      iban: updatedAccount.iban || accountData.iban,
+      bank: updatedAccount.bankName || updatedAccount.bank || accountData.bank
+    };
   },
 
   deleteAccount: async (id: string): Promise<void> => {
     checkAuth();
     const customerId = localStorage.getItem('customerId') || 'CUST001';
     
-    const response = await fetchAuthenticated(`http://10.138.177.26:8080/api/v1/customers/${customerId}/favorite-accounts/${id}`, {
+    const response = await fetchAuthenticated(`http://10.138.176.184:8080/api/v1/customers/${customerId}/favorite-accounts/${id}`, {
       method: 'DELETE',
     });
 
